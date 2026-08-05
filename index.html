@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>With Authority! &mdash; Rebuilt</title>
+<style>
+  :root {
+    --void: #0a0a0c;
+    --panel: #151318;
+    --panel-raised: #1c1a20;
+    --hairline: #2c2833;
+    --gold: #c9a227;
+    --gold-dim: #8a7128;
+    --parchment: #ece5d3;
+    --parchment-dim: #9b9488;
+    --danger: #b23b3b;
+    --success: #4f8f5b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--parchment);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .display { font-family: "Arial Black", Impact, "Franklin Gothic Bold", sans-serif; letter-spacing: 0.4px; }
+
+  header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--hairline);
+    background: linear-gradient(180deg, var(--panel-raised), var(--void));
+  }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 2px 0 0; font-size: 11.5px; color: var(--parchment-dim); }
+
+  #status { padding: 6px 16px; font-size: 11px; color: var(--parchment-dim); border-bottom: 1px solid var(--hairline); }
+
+  .versus {
+    display: flex; justify-content: space-between; padding: 14px 16px 6px; gap: 10px;
+  }
+  .fighter { flex: 1; min-width: 0; }
+  .fighter.b { text-align: right; }
+  .fighter-name { font-size: 14px; margin-bottom: 4px; }
+  .fighter-hp { font-size: 12px; color: var(--parchment-dim); margin-bottom: 4px; }
+  .hp-bar-track { height: 8px; border-radius: 4px; background: var(--panel-raised); border: 1px solid var(--hairline); overflow: hidden; }
+  .hp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--gold)); transition: width 0.3s; }
+  .fighter.b .hp-bar-fill { float: right; background: linear-gradient(270deg, var(--danger), var(--gold)); }
+
+  .momentum-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .fighter.b .momentum-row { justify-content: flex-end; }
+  .momentum-chip {
+    display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 5px;
+    background: var(--panel); border: 1px solid var(--chip-color, var(--hairline));
+    font-size: 10px;
+  }
+  .chip-label { color: var(--chip-color); font-weight: 700; }
+  .chip-val { color: var(--parchment); }
+
+  #turn { text-align: center; padding: 6px 0; font-size: 11px; color: var(--parchment-dim); }
+
+  #result { text-align: center; font-size: 15px; padding: 6px 16px; min-height: 20px; }
+  .result-win { color: var(--gold); }
+  .result-draw { color: var(--parchment-dim); }
+
+  #log {
+    flex: 1; overflow-y: auto; margin: 8px 16px; padding: 10px 12px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--hairline);
+    height: 44vh; font-size: 12px; line-height: 1.5;
+  }
+  .log-line { color: var(--parchment-dim); white-space: pre-wrap; }
+  .log-highlight { color: var(--gold); font-weight: 700; }
+
+  .controls { display: flex; gap: 8px; padding: 10px 16px 20px; }
+  button {
+    flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--hairline);
+    background: var(--panel-raised); color: var(--parchment); font-size: 13px; cursor: pointer;
+  }
+  button#run-btn { background: var(--gold); color: var(--void); border-color: var(--gold); font-weight: 700; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  select { background: var(--panel); color: var(--parchment); border: 1px solid var(--hairline); border-radius: 6px; padding: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1 class="display">WITH AUTHORITY! &mdash; REBUILT</h1>
+    <p>Offline recreation &middot; real extracted card data &middot; real interpreted card scripts</p>
+  </header>
+  <div id="status">Loading&hellip;</div>
+
+  <div class="versus">
+    <div class="fighter a">
+      <div class="fighter-name display" id="a-name">&nbsp;</div>
+      <div class="fighter-hp" id="a-hp">&nbsp;</div>
+      <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
+      <div class="momentum-row" id="a-momentum"></div>
+    </div>
+    <div class="fighter b">
+      <div class="fighter-name display" id="b-name">&nbsp;</div>
+      <div class="fighter-hp" id="b-hp">&nbsp;</div>
+      <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
+      <div class="momentum-row" id="b-momentum"></div>
+    </div>
+  </div>
+
+  <div id="turn">Turn 0 / 50</div>
+  <div id="result"></div>
+  <div id="log"></div>
+
+  <div class="controls">
+    <button id="step-btn" disabled>Step</button>
+    <button id="run-btn" disabled>Run</button>
+    <select id="speed-sel">
+      <option value="600">Slow</option>
+      <option value="250" selected>Normal</option>
+      <option value="60">Fast</option>
+    </select>
+    <button id="new-btn">New Match</button>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
