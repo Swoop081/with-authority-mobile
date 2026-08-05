@@ -83,13 +83,14 @@ function renderBodyDamage(target, player) {
   }
 }
 
-function costLabel(def) {
+function costInfo(def) {
+  let typed = null;
   for (const t of ['Strike', 'Strength', 'Technical', 'Agility', 'Knowledge']) {
     const c = def.getNumericField(`${t}_Cost`, 0);
-    if (c) return `${c} ${t}`;
+    if (c) { typed = `${c} ${t}`; break; }
   }
-  const mc = def.getNumericField('Momentum_Cost', 0);
-  return mc ? `${mc} Momentum` : null;
+  const total = def.getNumericField('Momentum_Cost', 0);
+  return { total: total || null, typed };
 }
 
 // Sorting spec (player's own words): momentum cards first while you
@@ -179,15 +180,16 @@ function buildFlipCard(pg, state) {
   front.className = 'flip-face front';
   front.style.backgroundImage = `url('${FRONT_TEMPLATE[kind]}')`;
   const img = cardImageUrl(pg.filename);
-  const costLbl = costLabel(pg.def);
+  const cost = costInfo(pg.def);
   const dmg = pg.def.getNumericField('Damage', 0);
   const method = pg.def.fields.Move_Type || pg.def.fields.Method || '';
+  const costText = cost.total ? `Cost: ${cost.total}` : (cost.typed ? `Cost: ${cost.typed}` : '');
   front.innerHTML = `
     ${img ? `<img class="front-photo" src="${img}" alt="" />` : ''}
     <div class="front-statbar">
       <div class="front-name">${pg.name}</div>
       <div class="front-meta">
-        <span>${costLbl ? 'Cost: ' + costLbl : ''}</span>
+        <span>${costText}</span>
         <span>${dmg ? 'DMG: ' + dmg : ''}</span>
       </div>
       ${method ? `<div class="front-method">${method}</div>` : ''}
@@ -200,7 +202,8 @@ function buildFlipCard(pg, state) {
   back.innerHTML = `
     <div class="back-content">
       <div class="back-name">${pg.name}</div>
-      ${costLbl ? `<div class="back-stat">Cost: ${costLbl}</div>` : ''}
+      ${cost.total ? `<div class="back-stat">Cost: ${cost.total}</div>` : ''}
+      ${cost.typed ? `<div class="back-stat">Requires: ${cost.typed}</div>` : ''}
       ${dmg ? `<div class="back-stat">Damage: ${dmg}</div>` : ''}
       ${method ? `<div class="back-stat">Type: ${method}</div>` : ''}
       <div class="back-text">${(pg.def.text || '').split('\r\n')[0].slice(0, 140)}</div>
