@@ -13,8 +13,6 @@ const els = {
   bPortrait: document.getElementById('b-portrait'),
   aHp: document.getElementById('a-hp'),
   bHp: document.getElementById('b-hp'),
-  aHpBar: document.getElementById('a-hp-bar'),
-  bHpBar: document.getElementById('b-hp-bar'),
   aMomentum: document.getElementById('a-momentum'),
   bMomentum: document.getElementById('b-momentum'),
   aBody: document.getElementById('a-body'),
@@ -97,10 +95,8 @@ function renderStats() {
   // split color+mask sprite format), not the small square card icon.
   els.aPortrait.src = 'images/kane-headshot.png';
   els.bPortrait.src = 'images/kane-headshot2.png';
-  els.aHp.textContent = `${A.hitPoints} / ${A.maxHitPoints}`;
-  els.bHp.textContent = `${B.hitPoints} / ${B.maxHitPoints}`;
-  els.aHpBar.style.width = `${Math.max(0, (A.hitPoints / A.maxHitPoints) * 100)}%`;
-  els.bHpBar.style.width = `${Math.max(0, (B.hitPoints / B.maxHitPoints) * 100)}%`;
+  els.aHp.innerHTML = `${A.hitPoints}<span> HP</span>`;
+  els.bHp.innerHTML = `${B.hitPoints}<span> HP</span>`;
   renderMomentum(els.aMomentum, A);
   renderMomentum(els.bMomentum, B);
   renderBodyDamage(els.aBody, A);
