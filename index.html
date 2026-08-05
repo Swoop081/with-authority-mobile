@@ -69,15 +69,24 @@
   .hp-bar-track { width: 100%; height: 10px; border-radius: 5px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; }
   .hp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--gold)); transition: width 0.3s; }
   .fighter.b .hp-bar-fill { float: right; background: linear-gradient(270deg, var(--danger), var(--gold)); }
-  .momentum-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-width: 220px; }
+  .momentum-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-width: 230px; }
   .fighter.b .momentum-row { justify-content: flex-end; }
   .momentum-chip {
-    display: flex; align-items: center; gap: 4px; padding: 4px 7px; border-radius: 6px;
+    display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; border-radius: 6px;
     background: rgba(10,10,12,0.75); border: 1px solid var(--chip-color, var(--hairline));
-    font-size: 11px; backdrop-filter: blur(2px);
+    font-size: 12px; backdrop-filter: blur(2px);
   }
-  .chip-label { color: var(--chip-color); font-weight: 700; }
-  .chip-val { color: var(--parchment); }
+  .momentum-chip img { width: 18px; height: 18px; border-radius: 3px; display: block; }
+  .momentum-chip.attitude-chip { padding: 3px 8px; }
+  .chip-val { color: var(--parchment); font-weight: 700; }
+
+  .body-damage-row { display: flex; gap: 6px; margin-top: 6px; }
+  .fighter.b .body-damage-row { justify-content: flex-end; }
+  .body-damage-chip {
+    font-size: 10.5px; padding: 2px 6px; border-radius: 5px; background: rgba(10,10,12,0.7);
+    border: 1px solid var(--hairline); color: var(--parchment-dim);
+  }
+  .body-damage-chip b { color: var(--parchment); }
 
   #turn { text-align: center; padding: 8px 0 2px; font-size: 13px; color: var(--parchment-dim); letter-spacing: 0.3px; }
   #result { text-align: center; font-size: 19px; padding: 6px 16px; min-height: 24px; }
@@ -103,18 +112,41 @@
   .hand-label { font-size: 12px; letter-spacing: 0.6px; color: var(--parchment-dim); margin-bottom: 8px; }
   .hand-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
 
-  .flip-card { width: 104px; height: 140px; flex-shrink: 0; perspective: 700px; scroll-snap-align: start; cursor: pointer; }
+  .flip-card { width: 150px; height: 200px; flex-shrink: 0; perspective: 900px; scroll-snap-align: start; cursor: pointer; }
   .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
   .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
-  .flip-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 9px; border: 2px solid var(--type-color, var(--hairline)); overflow: hidden; background: var(--panel-raised); box-shadow: 0 4px 10px rgba(0,0,0,0.35); }
-  .flip-face.back { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 8px; }
-  .flip-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .flip-face .card-name-strip { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(10,10,12,0.85); font-size: 10.5px; padding: 4px 6px; color: var(--parchment); line-height: 1.2; max-height: 34px; overflow: hidden; }
-  .flip-face.back .back-name { font-size: 12px; font-weight: 700; color: var(--type-color, var(--gold)); margin-bottom: 5px; line-height: 1.2; }
-  .flip-face.back .back-stat { font-size: 10.5px; color: var(--parchment-dim); margin-bottom: 3px; }
-  .flip-face.back .back-text { font-size: 9.5px; color: var(--parchment-dim); line-height: 1.3; overflow: hidden; flex: 1; }
-  .card-locked { opacity: 0.38; }
-  .card-back-generic { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; font-size: 11px; color: rgba(255,255,255,0.4); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 7px, #181620 7px, #181620 14px); }
+  .flip-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 10px; overflow: hidden; background: var(--panel-raised) center/cover;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.4);
+  }
+  .flip-face.back { transform: rotateY(180deg); }
+
+  /* Front: real template frame as base, character art inset, stat bar overlaid */
+  .front-photo {
+    position: absolute; left: 10%; top: 6%; width: 80%; height: 65%;
+    object-fit: cover; border-radius: 3px;
+  }
+  .front-statbar {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 5px 8px 6px;
+    background: rgba(8,8,10,0.88);
+  }
+  .front-name { font-size: 11.5px; font-weight: 700; color: var(--parchment); line-height: 1.2; margin-bottom: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .front-meta { display: flex; justify-content: space-between; font-size: 9px; color: var(--parchment-dim); }
+  .front-method { font-size: 8.5px; color: var(--type-color, var(--gold)); text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Back: real per-category back template, name + full rules text */
+  .back-content { position: absolute; inset: 0; padding: 16px 10px 10px 22px; display: flex; flex-direction: column; }
+  .back-name { font-size: 13px; font-weight: 700; color: #2a2410; margin-bottom: 6px; line-height: 1.2; }
+  .back-stat { font-size: 10.5px; color: #3a3220; margin-bottom: 3px; font-weight: 600; }
+  .back-text { font-size: 9px; color: #3a3220; line-height: 1.35; overflow: hidden; flex: 1; margin-top: 4px; }
+  .flip-face.back.dark-back .back-name,
+  .flip-face.back.dark-back .back-stat,
+  .flip-face.back.dark-back .back-text { color: #eee; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+
+  .card-locked { opacity: 0.4; }
+  .card-back-generic { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: 12px; color: rgba(255,255,255,0.4); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 7px, #181620 7px, #181620 14px); }
 
   #log { margin: 10px 16px; padding: 12px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--hairline); height: 26vh; overflow-y: auto; font-size: 12.5px; line-height: 1.55; }
   .log-line { color: var(--parchment-dim); white-space: pre-wrap; }
@@ -143,6 +175,7 @@
         <div class="fighter-hp" id="a-hp">&nbsp;</div>
         <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
         <div class="momentum-row" id="a-momentum"></div>
+        <div class="body-damage-row" id="a-body"></div>
       </div>
       <div class="fighter b">
         <img class="fighter-portrait" id="b-portrait" alt="" />
@@ -150,6 +183,7 @@
         <div class="fighter-hp" id="b-hp">&nbsp;</div>
         <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
         <div class="momentum-row" id="b-momentum"></div>
+        <div class="body-damage-row" id="b-body"></div>
       </div>
     </div>
   </div>

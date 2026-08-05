@@ -17,6 +17,8 @@ const els = {
   bHpBar: document.getElementById('b-hp-bar'),
   aMomentum: document.getElementById('a-momentum'),
   bMomentum: document.getElementById('b-momentum'),
+  aBody: document.getElementById('a-body'),
+  bBody: document.getElementById('b-body'),
   aHand: document.getElementById('a-hand'),
   turn: document.getElementById('turn'),
   result: document.getElementById('result'),
@@ -31,6 +33,19 @@ const TYPE_COLORS = {
   Strike: '#3f6f9e', Strength: '#c07a2b', Technical: '#9e3838',
   Agility: '#3d7a4f', Knowledge: '#a3822a', Attitude: '#c9a227',
 };
+// Best-guess mapping from the real momentum-icons.png sprite sheet to
+// stat types -- the sheet itself doesn't label which icon is which, so
+// this is an inference (graduation cap -> Knowledge and dumbbell ->
+// Strength are unambiguous; the wrench/hammer/spring assignments to
+// Technical/Strike/Agility are a reasonable guess, not confirmed).
+// Flag if these look wrong against the original and they're easy to
+// re-map.
+const MOMENTUM_ICONS = {
+  Strike: 'images/icon-strike.png', Strength: 'images/icon-strength.png',
+  Technical: 'images/icon-technical.png', Agility: 'images/icon-agility.png',
+  Knowledge: 'images/icon-knowledge.png',
+};
+const BODY_PARTS = ['Head', 'Arm', 'Back', 'Leg'];
 
 let db, game, interp, loop, running = false, matchOver = false, imageMap = {};
 let flippedCards = new Set(); // instanceIds currently showing their back
@@ -53,9 +68,23 @@ function renderMomentum(target, player) {
   target.innerHTML = '';
   for (const t of MOMENTUM_TYPES) {
     const chip = document.createElement('div');
-    chip.className = 'momentum-chip';
+    chip.className = 'momentum-chip' + (t === 'Attitude' ? ' attitude-chip' : '');
     chip.style.setProperty('--chip-color', TYPE_COLORS[t]);
-    chip.innerHTML = `<span class="chip-label">${t.slice(0, 3).toUpperCase()}</span><span class="chip-val">${player.momentum.get(t)}</span>`;
+    const iconSrc = MOMENTUM_ICONS[t];
+    chip.innerHTML = iconSrc
+      ? `<img src="${iconSrc}" alt="${t}" title="${t}" /><span class="chip-val">${player.momentum.get(t)}</span>`
+      : `<span class="chip-val" style="color:${TYPE_COLORS.Attitude}">WWF</span><span class="chip-val">${player.momentum.get(t)}</span>`;
+    target.appendChild(chip);
+  }
+}
+
+function renderBodyDamage(target, player) {
+  target.innerHTML = '';
+  for (const part of BODY_PARTS) {
+    const chip = document.createElement('div');
+    chip.className = 'body-damage-chip';
+    const dmg = player.submission.damage[part] || 0;
+    chip.innerHTML = `${part[0]} <b>${dmg}</b>`;
     target.appendChild(chip);
   }
 }
@@ -66,14 +95,16 @@ function renderStats() {
   els.bName.textContent = B.superstarPage.name;
   // Real full-body cutout art (properly composited from the game's
   // split color+mask sprite format), not the small square card icon.
-  els.aPortrait.src = 'images/kane-bodyshot.png';
-  els.bPortrait.src = 'images/kane-bodyshot.png';
+  els.aPortrait.src = 'images/kane-headshot.png';
+  els.bPortrait.src = 'images/kane-headshot2.png';
   els.aHp.textContent = `${A.hitPoints} / ${A.maxHitPoints}`;
   els.bHp.textContent = `${B.hitPoints} / ${B.maxHitPoints}`;
   els.aHpBar.style.width = `${Math.max(0, (A.hitPoints / A.maxHitPoints) * 100)}%`;
   els.bHpBar.style.width = `${Math.max(0, (B.hitPoints / B.maxHitPoints) * 100)}%`;
   renderMomentum(els.aMomentum, A);
   renderMomentum(els.bMomentum, B);
+  renderBodyDamage(els.aBody, A);
+  renderBodyDamage(els.bBody, B);
   els.turn.textContent = `Turn ${game.turn} / 50`;
   renderHand(A, B);
 }
@@ -112,8 +143,16 @@ function renderHand(player, opponent) {
 function buildFlipCard(pg, player, opponent) {
   const legal = loop.isLegalToPlay(pg, player, opponent);
   const isMomentum = isMomentumCard(pg.def);
+  const kind = pg.def.template?.includes('Special') ? 'special'
+    : isMomentum ? 'momentum'
+    : (pg.def.fields.Hit_Points !== undefined) ? 'superstar'
+    : 'move';
   const color = isMomentum ? (TYPE_COLORS[Object.keys(pg.def.fields).find((k) => k.endsWith('_Points'))?.replace('_Points', '')] || TYPE_COLORS.Attitude)
     : TYPE_COLORS[pg.def.fields.Method] || '#8a7128';
+
+  const FRONT_TEMPLATE = { move: 'images/page-front.png', momentum: 'images/monmentum-front.png', special: 'images/specials-front.png', superstar: 'images/superstar-front.png' };
+  const BACK_TEMPLATE = { move: 'images/card-back-page.png', momentum: 'images/momentum-back.png', special: 'images/specials-back.png', superstar: 'images/superstar-back.png' };
+  const DARK_BACK = { move: true, momentum: true, special: false, superstar: false };
 
   const card = document.createElement('div');
   card.className = 'flip-card' + (legal ? '' : ' card-locked');
@@ -126,22 +165,34 @@ function buildFlipCard(pg, player, opponent) {
 
   const front = document.createElement('div');
   front.className = 'flip-face front';
+  front.style.backgroundImage = `url('${FRONT_TEMPLATE[kind]}')`;
   const img = cardImageUrl(pg.filename);
-  if (img) {
-    front.innerHTML = `<img src="${img}" alt="" /><div class="card-name-strip">${pg.name}</div>`;
-  } else {
-    front.innerHTML = `<div class="card-back-generic">${pg.name}</div>`;
-  }
-
-  const back = document.createElement('div');
-  back.className = 'flip-face back';
   const costLbl = costLabel(pg.def);
   const dmg = pg.def.getNumericField('Damage', 0);
+  const method = pg.def.fields.Move_Type || pg.def.fields.Method || '';
+  front.innerHTML = `
+    ${img ? `<img class="front-photo" src="${img}" alt="" />` : ''}
+    <div class="front-statbar">
+      <div class="front-name">${pg.name}</div>
+      <div class="front-meta">
+        <span>${costLbl ? 'Cost: ' + costLbl : ''}</span>
+        <span>${dmg ? 'DMG: ' + dmg : ''}</span>
+      </div>
+      ${method ? `<div class="front-method">${method}</div>` : ''}
+    </div>
+  `;
+
+  const back = document.createElement('div');
+  back.className = 'flip-face back' + (DARK_BACK[kind] ? ' dark-back' : '');
+  back.style.backgroundImage = `url('${BACK_TEMPLATE[kind]}')`;
   back.innerHTML = `
-    <div class="back-name">${pg.name}</div>
-    ${costLbl ? `<div class="back-stat">Cost: ${costLbl}</div>` : ''}
-    ${dmg ? `<div class="back-stat">Damage: ${dmg}</div>` : ''}
-    <div class="back-text">${(pg.def.text || '').split('\r\n')[0].slice(0, 90)}</div>
+    <div class="back-content">
+      <div class="back-name">${pg.name}</div>
+      ${costLbl ? `<div class="back-stat">Cost: ${costLbl}</div>` : ''}
+      ${dmg ? `<div class="back-stat">Damage: ${dmg}</div>` : ''}
+      ${method ? `<div class="back-stat">Type: ${method}</div>` : ''}
+      <div class="back-text">${(pg.def.text || '').split('\r\n')[0].slice(0, 140)}</div>
+    </div>
   `;
 
   inner.appendChild(front);
