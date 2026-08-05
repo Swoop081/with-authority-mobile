@@ -143,17 +143,29 @@
   .flip-face.back.dark-back .back-text { color: #eee; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
 
   .card-locked { opacity: 0.4; }
+  .card-actionable { cursor: pointer; }
+  .card-actionable .flip-face.front { box-shadow: 0 0 0 2px var(--gold), 0 4px 14px rgba(201,162,39,0.4); }
   .card-back-generic { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: 12px; color: rgba(255,255,255,0.4); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 7px, #181620 7px, #181620 14px); }
 
   #log { margin: 10px 16px; padding: 12px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--hairline); height: 26vh; overflow-y: auto; font-size: 12.5px; line-height: 1.55; }
   .log-line { color: var(--parchment-dim); white-space: pre-wrap; }
   .log-highlight { color: var(--gold); font-weight: 700; }
 
+  #action-prompt {
+    margin: 4px 16px 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; text-align: center;
+    background: var(--panel-raised); border: 1px solid var(--hairline); color: var(--parchment); display: none;
+  }
+  #action-prompt.reaction { border-color: var(--danger); background: rgba(178,59,59,0.15); }
+  #action-prompt.your-turn { border-color: var(--gold); background: rgba(201,162,39,0.12); }
+
+  .action-buttons { display: flex; gap: 9px; padding: 8px 16px 4px; }
+  .action-buttons button { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--panel-raised); color: var(--parchment); font-size: 13.5px; cursor: pointer; }
+  .action-buttons button.pin-btn { background: var(--danger); border-color: var(--danger); color: #fff; font-weight: 700; }
+  .action-buttons button:disabled { opacity: 0.35; cursor: default; }
+
   .controls { display: flex; gap: 9px; padding: 10px 16px 22px; }
   button { flex: 1; padding: 13px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--panel-raised); color: var(--parchment); font-size: 14.5px; cursor: pointer; }
-  button#run-btn { background: var(--gold); color: var(--void); border-color: var(--gold); font-weight: 700; }
   button:disabled { opacity: 0.4; cursor: default; }
-  select { background: var(--panel); color: var(--parchment); border: 1px solid var(--hairline); border-radius: 8px; padding: 10px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -190,6 +202,7 @@
 
   <div id="turn">Turn 0 / 50</div>
   <div id="result"></div>
+  <div id="action-prompt"></div>
 
   <div class="play-pile">
     <div class="play-pile-ropes"></div>
@@ -201,16 +214,14 @@
     <div class="hand-row" id="a-hand"></div>
   </div>
 
+  <div class="action-buttons" id="action-buttons">
+    <button id="pin-btn" class="pin-btn">Attempt Pin</button>
+    <button id="pass-btn">Pass</button>
+  </div>
+
   <div id="log"></div>
 
   <div class="controls">
-    <button id="step-btn" disabled>Step</button>
-    <button id="run-btn" disabled>Run</button>
-    <select id="speed-sel">
-      <option value="600">Slow</option>
-      <option value="250" selected>Normal</option>
-      <option value="60">Fast</option>
-    </select>
     <button id="new-btn">New Match</button>
   </div>
 
