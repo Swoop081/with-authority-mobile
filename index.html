@@ -39,51 +39,47 @@
 
   /* ---- Arena versus panel ---- */
   .arena {
-    position: relative;
-    margin: 14px;
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--hairline);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    border-bottom: 1px solid var(--hairline);
     background: #000 url('images/crowd-bg.png') center/cover;
-    height: 380px;
   }
   .arena::after {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.65) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.6) 100%);
   }
-  .arena-ropes {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
-    background: url('images/ring-ropes-overlay.png') center/100% 100% no-repeat;
-    z-index: 2;
-  }
-  .arena-content { position: relative; z-index: 3; padding: 16px; display: flex; justify-content: space-between; align-items: flex-end; height: 100%; }
-  .fighter { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .fighter.b { align-items: flex-end; text-align: right; }
+  .arena-content { position: relative; z-index: 3; padding: 10px 12px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .fighter { flex: 1; min-width: 0; display: flex; gap: 8px; }
+  .fighter.b { flex-direction: row-reverse; text-align: right; }
   .fighter-portrait {
-    height: 190px; width: auto; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
-    margin-bottom: 6px;
+    width: 62px; height: 78px; object-fit: cover; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
   }
-  .fighter-name { font-size: 19px; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
-  .fighter-hp { font-size: 13px; color: var(--parchment-dim); margin: 2px 0 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-  .hp-bar-track { width: 100%; height: 10px; border-radius: 5px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; }
+  .fighter-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .fighter.b .fighter-info > * { align-self: flex-end; }
+  .fighter-name { font-size: 15px; text-shadow: 0 2px 6px rgba(0,0,0,0.8); line-height: 1.1; }
+  .fighter-hp { font-size: 11px; color: var(--parchment-dim); margin: 1px 0 3px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .hp-bar-track { width: 100%; height: 7px; border-radius: 4px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; }
   .hp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--gold)); transition: width 0.3s; }
   .fighter.b .hp-bar-fill { float: right; background: linear-gradient(270deg, var(--danger), var(--gold)); }
-  .momentum-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-width: 230px; }
-  .fighter.b .momentum-row { justify-content: flex-end; }
+
+  .momentum-row { display: grid; grid-template-columns: repeat(3, auto); gap: 3px; margin-top: 5px; }
   .momentum-chip {
-    display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; border-radius: 6px;
+    display: flex; align-items: center; gap: 3px; padding: 1px 5px 1px 1px; border-radius: 5px;
     background: rgba(10,10,12,0.75); border: 1px solid var(--chip-color, var(--hairline));
-    font-size: 12px; backdrop-filter: blur(2px);
+    font-size: 10px;
   }
-  .momentum-chip img { width: 18px; height: 18px; border-radius: 3px; display: block; }
-  .momentum-chip.attitude-chip { padding: 3px 8px; }
+  .momentum-chip img { width: 13px; height: 13px; border-radius: 2px; display: block; }
+  .momentum-chip.attitude-chip { padding: 1px 6px; }
   .chip-val { color: var(--parchment); font-weight: 700; }
 
-  .body-damage-row { display: flex; gap: 6px; margin-top: 6px; }
+  .body-damage-row { display: flex; gap: 3px; margin-top: 4px; }
   .fighter.b .body-damage-row { justify-content: flex-end; }
   .body-damage-chip {
-    font-size: 10.5px; padding: 2px 6px; border-radius: 5px; background: rgba(10,10,12,0.7);
+    font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(10,10,12,0.7);
     border: 1px solid var(--hairline); color: var(--parchment-dim);
   }
   .body-damage-chip b { color: var(--parchment); }
@@ -167,23 +163,26 @@
   <div id="status">Loading&hellip;</div>
 
   <div class="arena">
-    <div class="arena-ropes"></div>
     <div class="arena-content">
       <div class="fighter a">
         <img class="fighter-portrait" id="a-portrait" alt="" />
-        <div class="fighter-name display" id="a-name">&nbsp;</div>
-        <div class="fighter-hp" id="a-hp">&nbsp;</div>
-        <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
-        <div class="momentum-row" id="a-momentum"></div>
-        <div class="body-damage-row" id="a-body"></div>
+        <div class="fighter-info">
+          <div class="fighter-name display" id="a-name">&nbsp;</div>
+          <div class="fighter-hp" id="a-hp">&nbsp;</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
+          <div class="momentum-row" id="a-momentum"></div>
+          <div class="body-damage-row" id="a-body"></div>
+        </div>
       </div>
       <div class="fighter b">
         <img class="fighter-portrait" id="b-portrait" alt="" />
-        <div class="fighter-name display" id="b-name">&nbsp;</div>
-        <div class="fighter-hp" id="b-hp">&nbsp;</div>
-        <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
-        <div class="momentum-row" id="b-momentum"></div>
-        <div class="body-damage-row" id="b-body"></div>
+        <div class="fighter-info">
+          <div class="fighter-name display" id="b-name">&nbsp;</div>
+          <div class="fighter-hp" id="b-hp">&nbsp;</div>
+          <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
+          <div class="momentum-row" id="b-momentum"></div>
+          <div class="body-damage-row" id="b-body"></div>
+        </div>
       </div>
     </div>
   </div>
