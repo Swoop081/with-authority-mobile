@@ -18,7 +18,6 @@ const els = {
   aMomentum: document.getElementById('a-momentum'),
   bMomentum: document.getElementById('b-momentum'),
   aHand: document.getElementById('a-hand'),
-  bHand: document.getElementById('b-hand'),
   turn: document.getElementById('turn'),
   result: document.getElementById('result'),
   stepBtn: document.getElementById('step-btn'),
@@ -65,10 +64,10 @@ function renderStats() {
   const A = game.players.A, B = game.players.B;
   els.aName.textContent = A.superstarPage.name;
   els.bName.textContent = B.superstarPage.name;
-  const aImg = cardImageUrl(A.superstarPage.filename);
-  const bImg = cardImageUrl(B.superstarPage.filename);
-  if (aImg) els.aPortrait.src = aImg;
-  if (bImg) els.bPortrait.src = bImg;
+  // Real full-body cutout art (properly composited from the game's
+  // split color+mask sprite format), not the small square card icon.
+  els.aPortrait.src = 'images/kane-bodyshot.png';
+  els.bPortrait.src = 'images/kane-bodyshot.png';
   els.aHp.textContent = `${A.hitPoints} / ${A.maxHitPoints}`;
   els.bHp.textContent = `${B.hitPoints} / ${B.maxHitPoints}`;
   els.aHpBar.style.width = `${Math.max(0, (A.hitPoints / A.maxHitPoints) * 100)}%`;
@@ -77,7 +76,6 @@ function renderStats() {
   renderMomentum(els.bMomentum, B);
   els.turn.textContent = `Turn ${game.turn} / 50`;
   renderHand(A, B);
-  renderOpponentHand(B);
 }
 
 // Sorting spec (2024-08, player's own words): momentum cards first while
@@ -171,15 +169,10 @@ function costLabel(def) {
 // Confirmed rule this whole build follows: you never see the opponent's
 // hand contents, only that they have cards -- their identities are only
 // revealed in the log at the moment they're actually played.
-function renderOpponentHand(opponent) {
-  els.bHand.innerHTML = '';
-  for (let i = 0; i < opponent.playbook.hand.length; i++) {
-    const back = document.createElement('div');
-    back.className = 'flip-card';
-    back.innerHTML = '<div class="flip-card-inner"><div class="flip-face front"><div class="card-back-generic">?</div></div></div>';
-    els.bHand.appendChild(back);
-  }
-}
+// Confirmed rule this whole build follows: you never see the opponent's
+// hand contents, only that they have cards -- their identities are only
+// revealed in the log at the moment they're actually played. No visual
+// or textual representation of their hand is shown at all.
 
 async function init() {
   els.status.textContent = 'Loading real card data\u2026';
@@ -205,7 +198,7 @@ function newMatch() {
   const A = game.addPlayer('A', 'Kane.gac', decks.Kane.filter((c) => c !== 'Kane.gac'));
   const B = game.addPlayer('B', 'Kane2E.gac', decks.Kane2E.filter((c) => c !== 'Kane2E.gac'));
   const aHand = A.playbook.drawStartingHand();
-  const bHand = B.playbook.drawStartingHand();
+  B.playbook.drawStartingHand();
   game.controlPlayerId = 'A';
 
   loop = new GameLoop(game, interp, { rng });
@@ -216,8 +209,7 @@ function newMatch() {
   els.result.textContent = '';
   els.result.className = '';
   logLine('=== New match: ' + A.superstarPage.name + ' vs ' + B.superstarPage.name + ' ===');
-  logLine(`A\u2019s starting hand (5): ${aHand.map((c) => c.name).join(', ')}`);
-  logLine(`B\u2019s starting hand (5): ${bHand.map((c) => c.name).join(', ')}`);
+  logLine(`Your starting hand (5): ${aHand.map((c) => c.name).join(', ')}`);
   renderStats();
   els.stepBtn.disabled = false;
   els.runBtn.disabled = false;

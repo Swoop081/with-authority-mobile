@@ -3,6 +3,7 @@ import { HoldManager } from './submission.js';
 import { BODY_PARTS } from './submission.js';
 import { isMoveCard, isMomentumCard } from './host-functions.js';
 import { Location } from './location.js';
+import { hpScaledPinChance } from './win-conditions.js';
 
 // Ties every confirmed subsystem together into an actual playable match.
 // Where a rule wasn't confirmed (pin base %, AI reaction sophistication),
@@ -234,7 +235,7 @@ export class GameLoop {
       return { turnConsumed: true, control: this.game.controlPlayerId };
     }
 
-    const result = this.game.winTracker.attemptPin(attacker.id, defender, { type: 'pass' }, { basePinChance: 0.5 });
+    const result = this.game.winTracker.attemptPin(attacker.id, defender, { type: 'pass' });
     if (result.result) {
       return { turnConsumed: true, control: null }; // match over
     }
@@ -406,7 +407,17 @@ export class GameLoop {
     // opponent is on the mat, since attempting otherwise can never
     // succeed -- a human player could still press it anyway (their call
     // to waste a turn), but that's not a decision the AI should make.
-    if (defender.isOnMat() && !this.game.winTracker.isOver()) {
+    // Strategic gate (not a data-driven rule -- corrected from real
+    // playtesting, 2024-08): pinning is free and repeatable every turn
+    // the opponent is on the mat, so even the HP-scaled per-attempt
+    // chance will eventually land if attempted blindly every time --
+    // this was still producing pins with the opponent barely touched.
+    // A sensible wrestler waits for a real opportunity rather than
+    // going for a cover after every single takedown. Only actually
+    // attempt when the roll is genuinely worth taking.
+    const PIN_ATTEMPT_THRESHOLD = 0.45;
+    if (defender.isOnMat() && !this.game.winTracker.isOver()
+        && hpScaledPinChance(defender) >= PIN_ATTEMPT_THRESHOLD) {
       const pinResult = this.attemptFreePin(attacker, defender);
       if (pinResult.turnConsumed) return pinResult.control;
     }

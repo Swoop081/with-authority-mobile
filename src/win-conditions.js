@@ -24,6 +24,17 @@
 
 export const TURN_LIMIT = 50;
 
+// HP-scaled pin chance curve (tuning constant, not extracted from real
+// data -- see attemptPin's comment for why). At full health: 8% --
+// pinning someone who hasn't been touched should almost never work. At
+// 0 HP: 80% -- should be close to a formality by then. Linear between.
+export function hpScaledPinChance(defender) {
+  const hpFraction = Math.max(0, Math.min(1, defender.hitPoints / defender.maxHitPoints));
+  const MIN_CHANCE = 0.08;
+  const MAX_CHANCE = 0.80;
+  return MIN_CHANCE + (MAX_CHANCE - MIN_CHANCE) * (1 - hpFraction);
+}
+
 export const WinReason = Object.freeze({
   PIN: 'pin',
   SUBMISSION: 'submission',
@@ -121,7 +132,16 @@ export class WinConditionTracker {
     return this.result;
   }
 
-  // `defender` must expose isOnMat(). `basePinChance` is a placeholder
+  // `defender` must expose isOnMat(). `basePinChance` is a TUNING
+  // VALUE, not extracted from data (the real formula is lost -- it
+  // lived in the compiled WAPinSuperstar implementation). CORRECTED
+  // (2024-08, from real playtesting): a flat 50% regardless of how much
+  // damage had actually been dealt was letting matches end by pinfall
+  // with the opponent still above 50 HP (out of 75), making health feel
+  // irrelevant. Replaced with an HP-scaled curve: pinning a fresh
+  // opponent is genuinely hard, pinning someone nearly finished is
+  // genuinely likely. Cards' own "+35% pin chance" style bonuses still
+  // stack on top via `bonusChance`.
   // (0-1) until the real formula is confirmed; `bonusChance` lets a
   // specific card's modifier (e.g. "+35%") be applied on top.
   //
@@ -142,7 +162,7 @@ export class WinConditionTracker {
   // through the interpreter, each card's own effect decides the outcome.
   // For now, a cancelled pin just reports 'pin-countered' and leaves
   // control resolution to the caller/card script.
-  attemptPin(attackerId, defender, reaction, { basePinChance = 0.5, bonusChance = 0 } = {}) {
+  attemptPin(attackerId, defender, reaction, { basePinChance = null, bonusChance = 0 } = {}) {
     if (this.isOver()) return { success: false, result: this.result };
     if (!this.referee.canCountPin()) {
       this.log(`Referee is distracted -- pin attempt on ${defender.id} not counted.`);
@@ -156,7 +176,8 @@ export class WinConditionTracker {
                `(Control outcome depends on the specific card's own effect.)`);
       return { success: false, result: this.result, cancelled: true, card: reaction.card };
     }
-    const chance = Math.min(1, Math.max(0, basePinChance + bonusChance));
+    const base = basePinChance !== null ? basePinChance : hpScaledPinChance(defender);
+    const chance = Math.min(1, Math.max(0, base + bonusChance));
     const success = this.rng() < chance;
     if (success) {
       this.declarePin(attackerId);

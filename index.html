@@ -28,101 +28,103 @@
   .display { font-family: "Arial Black", Impact, "Franklin Gothic Bold", sans-serif; letter-spacing: 0.4px; }
 
   header {
-    padding: 16px 16px 12px;
+    padding: 18px 18px 14px;
     border-bottom: 1px solid var(--hairline);
     background: linear-gradient(180deg, var(--panel-raised), var(--void));
   }
-  header h1 { margin: 0; font-size: 18px; }
-  header p { margin: 2px 0 0; font-size: 11.5px; color: var(--parchment-dim); }
+  header h1 { margin: 0; font-size: 21px; }
+  header p { margin: 3px 0 0; font-size: 12.5px; color: var(--parchment-dim); }
 
-  #status { padding: 6px 16px; font-size: 11px; color: var(--parchment-dim); border-bottom: 1px solid var(--hairline); }
+  #status { padding: 7px 18px; font-size: 12px; color: var(--parchment-dim); border-bottom: 1px solid var(--hairline); }
 
-  .versus {
-    display: flex; justify-content: space-between; padding: 14px 16px 6px; gap: 10px;
+  /* ---- Arena versus panel ---- */
+  .arena {
+    position: relative;
+    margin: 14px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: #000 url('images/crowd-bg.png') center/cover;
+    height: 380px;
   }
-  .fighter { flex: 1; min-width: 0; }
-  .fighter.b { text-align: right; }
-  .fighter-name { font-size: 14px; margin-bottom: 4px; }
-  .fighter-hp { font-size: 12px; color: var(--parchment-dim); margin-bottom: 4px; }
-  .hp-bar-track { height: 8px; border-radius: 4px; background: var(--panel-raised); border: 1px solid var(--hairline); overflow: hidden; }
+  .arena::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.65) 100%);
+  }
+  .arena-ropes {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+    background: url('images/ring-ropes-overlay.png') center/100% 100% no-repeat;
+    z-index: 2;
+  }
+  .arena-content { position: relative; z-index: 3; padding: 16px; display: flex; justify-content: space-between; align-items: flex-end; height: 100%; }
+  .fighter { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .fighter.b { align-items: flex-end; text-align: right; }
+  .fighter-portrait {
+    height: 190px; width: auto; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6));
+    margin-bottom: 6px;
+  }
+  .fighter-name { font-size: 19px; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+  .fighter-hp { font-size: 13px; color: var(--parchment-dim); margin: 2px 0 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .hp-bar-track { width: 100%; height: 10px; border-radius: 5px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden; }
   .hp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--danger), var(--gold)); transition: width 0.3s; }
   .fighter.b .hp-bar-fill { float: right; background: linear-gradient(270deg, var(--danger), var(--gold)); }
-
-  .momentum-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .momentum-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-width: 220px; }
   .fighter.b .momentum-row { justify-content: flex-end; }
   .momentum-chip {
-    display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 5px;
-    background: var(--panel); border: 1px solid var(--chip-color, var(--hairline));
-    font-size: 10px;
+    display: flex; align-items: center; gap: 4px; padding: 4px 7px; border-radius: 6px;
+    background: rgba(10,10,12,0.75); border: 1px solid var(--chip-color, var(--hairline));
+    font-size: 11px; backdrop-filter: blur(2px);
   }
   .chip-label { color: var(--chip-color); font-weight: 700; }
   .chip-val { color: var(--parchment); }
 
-  #turn { text-align: center; padding: 6px 0; font-size: 11px; color: var(--parchment-dim); }
-
-  #result { text-align: center; font-size: 15px; padding: 6px 16px; min-height: 20px; }
+  #turn { text-align: center; padding: 8px 0 2px; font-size: 13px; color: var(--parchment-dim); letter-spacing: 0.3px; }
+  #result { text-align: center; font-size: 19px; padding: 6px 16px; min-height: 24px; }
   .result-win { color: var(--gold); }
   .result-draw { color: var(--parchment-dim); }
 
-  #log {
-    flex: 1; overflow-y: auto; margin: 8px 16px; padding: 10px 12px; border-radius: 8px;
-    background: var(--panel); border: 1px solid var(--hairline);
-    height: 30vh; font-size: 12px; line-height: 1.5;
+  /* ---- Play pile section (real ring/crowd art, matching the original mockup) ---- */
+  .play-pile {
+    position: relative; margin: 14px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: #000 url('images/crowd-bg.png') center/cover;
+    height: 190px;
   }
+  .play-pile::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+  .play-pile-ropes { position: absolute; inset: 0; background: url('images/ring-ropes-overlay.png') center/100% 100% no-repeat; z-index: 2; }
+  .play-pile-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3;
+    font-size: 22px; letter-spacing: 2px; color: rgba(255,255,255,0.9); text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  }
+
+  /* ---- Hand ---- */
+  .hand-section { padding: 4px 16px 6px; }
+  .hand-label { font-size: 12px; letter-spacing: 0.6px; color: var(--parchment-dim); margin-bottom: 8px; }
+  .hand-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+
+  .flip-card { width: 104px; height: 140px; flex-shrink: 0; perspective: 700px; scroll-snap-align: start; cursor: pointer; }
+  .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
+  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+  .flip-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 9px; border: 2px solid var(--type-color, var(--hairline)); overflow: hidden; background: var(--panel-raised); box-shadow: 0 4px 10px rgba(0,0,0,0.35); }
+  .flip-face.back { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 8px; }
+  .flip-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .flip-face .card-name-strip { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(10,10,12,0.85); font-size: 10.5px; padding: 4px 6px; color: var(--parchment); line-height: 1.2; max-height: 34px; overflow: hidden; }
+  .flip-face.back .back-name { font-size: 12px; font-weight: 700; color: var(--type-color, var(--gold)); margin-bottom: 5px; line-height: 1.2; }
+  .flip-face.back .back-stat { font-size: 10.5px; color: var(--parchment-dim); margin-bottom: 3px; }
+  .flip-face.back .back-text { font-size: 9.5px; color: var(--parchment-dim); line-height: 1.3; overflow: hidden; flex: 1; }
+  .card-locked { opacity: 0.38; }
+  .card-back-generic { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; font-size: 11px; color: rgba(255,255,255,0.4); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 7px, #181620 7px, #181620 14px); }
+
+  #log { margin: 10px 16px; padding: 12px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--hairline); height: 26vh; overflow-y: auto; font-size: 12.5px; line-height: 1.55; }
   .log-line { color: var(--parchment-dim); white-space: pre-wrap; }
   .log-highlight { color: var(--gold); font-weight: 700; }
 
-  .portrait {
-    width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
-    border: 1px solid var(--hairline); margin-bottom: 6px; background: var(--panel);
-  }
-  .fighter.b .portrait { float: right; }
-
-  .hand-section { padding: 10px 16px 4px; }
-  .hand-label { font-size: 10.5px; letter-spacing: 0.6px; color: var(--parchment-dim); margin-bottom: 6px; }
-  .hand-row {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity;
-  }
-
-  .flip-card {
-    width: 74px; height: 100px; flex-shrink: 0; perspective: 600px; scroll-snap-align: start;
-    cursor: pointer;
-  }
-  .flip-card-inner {
-    position: relative; width: 100%; height: 100%; transition: transform 0.4s;
-    transform-style: preserve-3d;
-  }
-  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
-  .flip-face {
-    position: absolute; inset: 0; backface-visibility: hidden;
-    border-radius: 6px; border: 1.5px solid var(--type-color, var(--hairline));
-    overflow: hidden; background: var(--panel-raised);
-  }
-  .flip-face.back { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 5px; }
-  .flip-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .flip-face .card-name-strip {
-    position: absolute; left: 0; right: 0; bottom: 0; background: rgba(10,10,12,0.82);
-    font-size: 8px; padding: 2px 4px; color: var(--parchment); line-height: 1.15;
-    max-height: 26px; overflow: hidden;
-  }
-  .flip-face.back .back-name { font-size: 9px; font-weight: 700; color: var(--type-color, var(--gold)); margin-bottom: 3px; line-height: 1.15; }
-  .flip-face.back .back-stat { font-size: 8px; color: var(--parchment-dim); margin-bottom: 2px; }
-  .flip-face.back .back-text { font-size: 7.5px; color: var(--parchment-dim); line-height: 1.2; overflow: hidden; flex: 1; }
-  .card-locked { opacity: 0.4; }
-
-  .card-back-generic {
-    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-    font-size: 9px; color: rgba(255,255,255,0.3); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 6px, #181620 6px, #181620 12px);
-  }
-
-  .controls { display: flex; gap: 8px; padding: 10px 16px 20px; }
-  button {
-    flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--hairline);
-    background: var(--panel-raised); color: var(--parchment); font-size: 13px; cursor: pointer;
-  }
+  .controls { display: flex; gap: 9px; padding: 10px 16px 22px; }
+  button { flex: 1; padding: 13px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--panel-raised); color: var(--parchment); font-size: 14.5px; cursor: pointer; }
   button#run-btn { background: var(--gold); color: var(--void); border-color: var(--gold); font-weight: 700; }
   button:disabled { opacity: 0.4; cursor: default; }
-  select { background: var(--panel); color: var(--parchment); border: 1px solid var(--hairline); border-radius: 6px; padding: 8px; font-size: 12px; }
+  select { background: var(--panel); color: var(--parchment); border: 1px solid var(--hairline); border-radius: 8px; padding: 10px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -132,33 +134,37 @@
   </header>
   <div id="status">Loading&hellip;</div>
 
-  <div class="versus">
-    <div class="fighter a">
-      <img class="portrait" id="a-portrait" alt="" />
-      <div class="fighter-name display" id="a-name">&nbsp;</div>
-      <div class="fighter-hp" id="a-hp">&nbsp;</div>
-      <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
-      <div class="momentum-row" id="a-momentum"></div>
-    </div>
-    <div class="fighter b">
-      <img class="portrait" id="b-portrait" alt="" />
-      <div class="fighter-name display" id="b-name">&nbsp;</div>
-      <div class="fighter-hp" id="b-hp">&nbsp;</div>
-      <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
-      <div class="momentum-row" id="b-momentum"></div>
+  <div class="arena">
+    <div class="arena-ropes"></div>
+    <div class="arena-content">
+      <div class="fighter a">
+        <img class="fighter-portrait" id="a-portrait" alt="" />
+        <div class="fighter-name display" id="a-name">&nbsp;</div>
+        <div class="fighter-hp" id="a-hp">&nbsp;</div>
+        <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
+        <div class="momentum-row" id="a-momentum"></div>
+      </div>
+      <div class="fighter b">
+        <img class="fighter-portrait" id="b-portrait" alt="" />
+        <div class="fighter-name display" id="b-name">&nbsp;</div>
+        <div class="fighter-hp" id="b-hp">&nbsp;</div>
+        <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
+        <div class="momentum-row" id="b-momentum"></div>
+      </div>
     </div>
   </div>
 
   <div id="turn">Turn 0 / 50</div>
   <div id="result"></div>
 
-  <div class="hand-section">
-    <div class="hand-label display">YOUR HAND (Player A)</div>
-    <div class="hand-row" id="a-hand"></div>
+  <div class="play-pile">
+    <div class="play-pile-ropes"></div>
+    <div class="play-pile-label display">PLAY PILE</div>
   </div>
+
   <div class="hand-section">
-    <div class="hand-label display">OPPONENT'S HAND (hidden)</div>
-    <div class="hand-row" id="b-hand"></div>
+    <div class="hand-label display">YOUR HAND</div>
+    <div class="hand-row" id="a-hand"></div>
   </div>
 
   <div id="log"></div>
