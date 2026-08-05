@@ -108,8 +108,9 @@
   .hand-section { padding: 4px 16px 6px; }
   .hand-label { font-size: 12px; letter-spacing: 0.6px; color: var(--parchment-dim); margin-bottom: 8px; }
   .hand-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+  .hand-slot { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex-shrink: 0; scroll-snap-align: start; }
 
-  .flip-card { width: 150px; height: 200px; flex-shrink: 0; perspective: 900px; scroll-snap-align: start; cursor: pointer; }
+  .flip-card { width: 150px; height: 200px; flex-shrink: 0; perspective: 900px; cursor: pointer; }
   .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; }
   .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
   .flip-face {
@@ -145,6 +146,11 @@
   .card-locked { opacity: 0.4; }
   .card-actionable { cursor: pointer; }
   .card-actionable .flip-face.front { box-shadow: 0 0 0 2px var(--gold), 0 4px 14px rgba(201,162,39,0.4); }
+  .card-play-btn {
+    width: 150px; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--gold);
+    background: var(--gold); color: var(--void); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .card-play-btn:disabled { background: var(--panel-raised); border-color: var(--hairline); color: var(--parchment-dim); opacity: 0.5; cursor: default; }
   .card-back-generic { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: 12px; color: rgba(255,255,255,0.4); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 7px, #181620 7px, #181620 14px); }
 
   #log { margin: 10px 16px; padding: 12px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--hairline); height: 26vh; overflow-y: auto; font-size: 12.5px; line-height: 1.55; }
@@ -166,9 +172,109 @@
   .controls { display: flex; gap: 9px; padding: 10px 16px 22px; }
   button { flex: 1; padding: 13px; border-radius: 10px; border: 1px solid var(--hairline); background: var(--panel-raised); color: var(--parchment); font-size: 14.5px; cursor: pointer; }
   button:disabled { opacity: 0.4; cursor: default; }
+
+  /* ---- Character select screen ---- */
+  #select-screen {
+    min-height: 100vh; padding: 16px; display: flex; flex-direction: column;
+    background: #000 url('images/crowd-bg.png') center/cover;
+  }
+  .select-header {
+    font-size: 20px; text-align: center; margin: 10px 0 14px;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.9);
+  }
+  #select-search {
+    padding: 11px 14px; border-radius: 10px; border: 1px solid var(--hairline);
+    background: rgba(10,10,12,0.85); color: var(--parchment); font-size: 14px; margin-bottom: 12px;
+  }
+  #select-grid {
+    flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    padding-bottom: 12px;
+  }
+  .select-card {
+    border-radius: 10px; overflow: hidden; border: 2px solid var(--hairline); cursor: pointer;
+    background: rgba(10,10,12,0.75); text-align: center;
+  }
+  .select-card.chosen { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 4px 14px rgba(201,162,39,0.5); }
+  .select-card img { width: 100%; aspect-ratio: 5/6; object-fit: cover; display: block; background: var(--panel); }
+  .select-card .select-name { font-size: 10.5px; padding: 5px 3px; line-height: 1.15; color: var(--parchment); }
+  #select-confirm-btn {
+    margin-top: 10px; padding: 15px; background: var(--gold); color: var(--void);
+    font-weight: 700; font-size: 15px; border: none; border-radius: 10px;
+  }
+
+  /* ---- Deck builder screen ---- */
+  #deckbuilder-screen { min-height: 100vh; display: flex; flex-direction: column; background: var(--void); }
+  .db-header {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    background: var(--panel-raised); border-bottom: 1px solid var(--hairline);
+  }
+  .db-header img { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; border: 1px solid var(--hairline); }
+  .db-header-text { flex: 1; min-width: 0; }
+  #db-superstar-name { font-size: 16px; }
+  #db-validation { font-size: 12px; margin-top: 2px; color: var(--parchment-dim); }
+  #db-validation.valid { color: var(--success); }
+  #db-validation.invalid { color: var(--danger); }
+
+  .db-tabs { display: flex; gap: 8px; padding: 10px 14px 0; }
+  .db-tab { flex: 1; padding: 10px; border-radius: 8px 8px 0 0; border: 1px solid var(--hairline); border-bottom: none;
+    background: var(--panel); color: var(--parchment-dim); font-size: 13px; cursor: pointer; }
+  .db-tab.active { background: var(--panel-raised); color: var(--gold); font-weight: 700; }
+
+  #db-search { margin: 10px 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--hairline);
+    background: var(--panel); color: var(--parchment); font-size: 13px; }
+
+  #db-card-list { flex: 1; overflow-y: auto; padding: 0 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .db-card-row { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px;
+    background: var(--panel-raised); border: 1px solid var(--hairline); }
+  .db-card-row.illegal { opacity: 0.4; }
+  .db-card-row img { width: 40px; height: 48px; object-fit: cover; border-radius: 4px; background: var(--panel); flex-shrink: 0; }
+  .db-card-info { flex: 1; min-width: 0; }
+  .db-card-name { font-size: 13px; color: var(--parchment); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .db-card-meta { font-size: 10.5px; color: var(--parchment-dim); margin-top: 1px; }
+  .db-card-count { font-size: 12px; color: var(--parchment-dim); min-width: 42px; text-align: center; }
+  .db-card-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--hairline);
+    background: var(--panel); color: var(--parchment); font-size: 17px; cursor: pointer; flex-shrink: 0; }
+  .db-card-btn:disabled { opacity: 0.3; cursor: default; }
+  .db-card-btn.add { border-color: var(--success); color: var(--success); }
+  .db-card-btn.remove { border-color: var(--danger); color: var(--danger); }
+
+  .db-footer { display: flex; gap: 9px; padding: 10px 14px 20px; border-top: 1px solid var(--hairline); }
+  .db-footer button { flex: 1; padding: 13px; border-radius: 10px; border: 1px solid var(--hairline);
+    background: var(--panel-raised); color: var(--parchment); font-size: 13.5px; cursor: pointer; }
+  #db-start-btn { background: var(--gold); color: var(--void); font-weight: 700; border-color: var(--gold); }
+  #db-start-btn:disabled { background: var(--panel-raised); color: var(--parchment-dim); border-color: var(--hairline); opacity: 0.5; }
 </style>
 </head>
 <body>
+  <div id="select-screen">
+    <div class="select-header display">CHOOSE YOUR SUPERSTAR</div>
+    <input id="select-search" placeholder="Search real WWF superstars..." />
+    <div id="select-grid"></div>
+    <button id="select-confirm-btn" disabled>Build Deck</button>
+  </div>
+
+  <div id="deckbuilder-screen" style="display:none;">
+    <div class="db-header">
+      <img id="db-portrait" alt="" />
+      <div class="db-header-text">
+        <div id="db-superstar-name" class="display"></div>
+        <div id="db-validation"></div>
+      </div>
+    </div>
+    <div class="db-tabs">
+      <button id="db-tab-collection" class="db-tab active">Collection</button>
+      <button id="db-tab-deck" class="db-tab">My Deck (<span id="db-deck-count">0</span>)</button>
+    </div>
+    <input id="db-search" placeholder="Search cards..." />
+    <div id="db-card-list"></div>
+    <div class="db-footer">
+      <button id="db-back-btn">Back</button>
+      <button id="db-auto-btn">Auto-Build</button>
+      <button id="db-start-btn" disabled>Start Match</button>
+    </div>
+  </div>
+
+  <div id="match-screen" style="display:none;">
   <div id="status" style="display:none;">Loading&hellip;</div>
 
   <div class="arena">
@@ -216,13 +322,19 @@
 
   <div class="action-buttons" id="action-buttons">
     <button id="pin-btn" class="pin-btn">Attempt Pin</button>
+    <button id="continue-hold-btn">Continue Hold</button>
+    <button id="release-hold-btn">Release Hold</button>
+    <button id="tapout-btn" class="pin-btn">Tap Out</button>
+    <button id="return-ring-btn">Return to Ring</button>
     <button id="pass-btn">Pass</button>
   </div>
 
   <div id="log"></div>
 
   <div class="controls">
-    <button id="new-btn">New Match</button>
+    <button id="change-btn">Change Superstar</button>
+    <button id="new-btn">Rematch</button>
+  </div>
   </div>
 
   <script type="module" src="main.js"></script>

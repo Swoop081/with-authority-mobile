@@ -1,7 +1,7 @@
 import { Zone } from './page-instance.js';
 import { HoldManager } from './submission.js';
 import { BODY_PARTS } from './submission.js';
-import { isMoveCard, isMomentumCard } from './host-functions.js';
+import { isMoveCard, isMomentumCard, isSpecialCard } from './host-functions.js';
 import { Location } from './location.js';
 import { hpScaledPinChance } from './win-conditions.js';
 
@@ -70,6 +70,7 @@ export class GameLoop {
   // confirmed to live in card data -- not a hand-built heuristic.
   chooseMove(player, opponent) {
     const legalMoves = player.playbook.hand.filter((pg) => {
+      if (isSpecialCard(pg.def)) return this.isLegalToPlay(pg, player, opponent);
       if (!isMoveCard(pg.def)) return false;
       // CONFIRMED (real bug found via a real GitHub Pages test run):
       // Move_Type "defensive" marks a card as counter-only -- e.g. "Up
@@ -243,9 +244,79 @@ export class GameLoop {
     return { turnConsumed: true, control: attacker.id };
   }
 
+  // Damage_Bonus/Prevent_Damage/Prevent_Submission_Damage, confirmed
+  // real (Kane's own card: reduces Impact damage against himself; his
+  // Entrance card "Hellfire And Brimstone": +1 Strength damage, and full
+  // immunity to Strike damage until turn 10). These were never invoked
+  // anywhere before -- checked across the move itself, both superstars'
+  // own innate scripts, and any ongoing passive/Entrance effects either
+  // side has in play. Convention confirmed from the scripts themselves:
+  // Prevent_Damage returns Nil (false) to block the damage entirely,
+  // True to allow it.
+  passiveSources(attacker, defender) {
+    return [
+      attacker.superstarPage, defender.superstarPage,
+      ...attacker.activePassives, ...defender.activePassives,
+    ].filter(Boolean);
+  }
+
+  computeFinalDamage(attacker, defender, movePage, baseDamage) {
+    movePage.setValue('Damage_Bonus', 0);
+    const sources = [movePage, ...this.passiveSources(attacker, defender)];
+    for (const src of sources) {
+      if (src.def.hasScript('Damage_Bonus')) {
+        const ctx = this.baseCtx(src, attacker.superstarPage, defender.superstarPage, movePage);
+        this.runScript(src.def, 'Damage_Bonus', ctx);
+      }
+    }
+    return Math.max(0, baseDamage + (movePage.getValue('Damage_Bonus') || 0));
+  }
+
+  isDamagePrevented(attacker, defender, movePage, submissionMode = false) {
+    const hook = submissionMode ? 'Prevent_Submission_Damage' : 'Prevent_Damage';
+    const sources = [...this.passiveSources(attacker, defender), movePage];
+    for (const src of sources) {
+      if (src.def.hasScript(hook)) {
+        const ctx = this.baseCtx(src, attacker.superstarPage, defender.superstarPage, movePage);
+        if (this.runScript(src.def, hook, ctx) === false) return true;
+      }
+    }
+    return false;
+  }
+
+  // Special cards (confirmed real category, includes Entrance cards):
+  // resolve via Page_Played, never counter-eligible, uncontested.
+  // Confirmed real mechanic: cards like Kane's Entrance stay in play for
+  // the rest of the match applying ongoing Damage_Bonus/Prevent_Damage
+  // effects, rather than being discarded after their one-time text
+  // (e.g. "Draw a page") resolves. Detected generically: if the card
+  // carries any of those three hooks, it's a persistent passive.
+  resolveSpecialCard(attacker, defender, page) {
+    attacker.playbook.playFromHand(page);
+    page.playedByPlayerId = attacker.id;
+    page.playedOnTurn = this.game.turn;
+    const ctx = this.baseCtx(page, attacker.superstarPage, defender.superstarPage);
+    this.runScript(page.def, 'Page_Played', ctx);
+    const isPersistent = ['Damage_Bonus', 'Prevent_Damage', 'Prevent_Submission_Damage']
+      .some((hook) => page.def.hasScript(hook));
+    if (isPersistent) {
+      page.zone = Zone.IN_PLAY;
+      attacker.activePassives.push(page);
+      this.game.log(`${attacker.id} plays ${page.name} (stays in play).`);
+    } else {
+      page.zone = Zone.DISCARD;
+      attacker.playbook.discard.push(page);
+      this.game.log(`${attacker.id} plays ${page.name}.`);
+    }
+  }
+
   applyMoveEffects(attacker, defender, movePage) {
-    const damage = movePage.def.getNumericField('Damage', 0);
-    if (damage) defender.hitPoints = Math.max(0, defender.hitPoints - damage);
+    const baseDamage = movePage.def.getNumericField('Damage', 0);
+    let damage = 0;
+    if (baseDamage > 0 && !this.isDamagePrevented(attacker, defender, movePage)) {
+      damage = this.computeFinalDamage(attacker, defender, movePage, baseDamage);
+      defender.hitPoints = Math.max(0, defender.hitPoints - damage);
+    }
     const connMomentum = movePage.def.getNumericField('Connected_Momentum', 0);
     if (connMomentum) {
       const method = movePage.def.fields.Method;
@@ -264,7 +335,7 @@ export class GameLoop {
     // "applies" the hold, it just has Modifiers:"Hold" and
     // Back_Submission_Damage:6, and WAInSubmissionHold becomes true.
     const modifiers = (movePage.def.fields.Modifiers || '').split('|');
-    if (modifiers.includes('Hold')) {
+    if (modifiers.includes('Hold') && !this.isDamagePrevented(attacker, defender, movePage, true)) {
       for (const part of BODY_PARTS) {
         const dmg = movePage.def.getNumericField(`${part}_Submission_Damage`, 0);
         if (dmg > 0) {
@@ -391,8 +462,8 @@ export class GameLoop {
     if (attacker.locationState.isRingside()) {
       attacker.locationState.moveTo(Location.IN_RING);
       this.game.log(`${attackerId} returns to the ring (count reset).`);
-      this.game.controlPlayerId = defenderId;
-      return defenderId;
+      // CORRECTED: confirmed a free priority action, doesn't end the
+      // turn -- falls through to continue normally below.
     }
 
     this.maybeDraw(attacker);
@@ -430,6 +501,22 @@ export class GameLoop {
       return defenderId;
     }
 
+    // CONFIRMED (found via real match trace, "Stunning Blow"): not all
+    // Special cards are passive/Entrance-style. Some -- "Damage
+    // Specials" -- connect and deal damage via Move_Connected exactly
+    // like a move (Stunning Blow has Damage + Move_Connected, no
+    // Page_Played at all). Only route genuinely passive specials (no
+    // Move_Connected/Damage) through the dedicated uncontested path;
+    // Damage Specials fall through to the normal move pipeline below,
+    // getting the real counter window and damage pipeline. Real
+    // Move_Type-based counters won't match them (they typically have no
+    // Move_Type of their own), which is itself accurate -- confirmed
+    // via chooseCounter's existing guard already handling that case.
+    if (isSpecialCard(movePage.def) && !movePage.def.hasScript('Move_Connected') && !movePage.def.getNumericField('Damage', 0)) {
+      this.resolveSpecialCard(attacker, defender, movePage);
+      return attackerId; // uncontested -- control stays, same as a connected move
+    }
+
     attacker.playbook.playFromHand(movePage);
     movePage.zone = Zone.IN_PLAY;
     movePage.playedByPlayerId = attackerId;
@@ -447,8 +534,12 @@ export class GameLoop {
       // not the original move's). Previously this was skipped entirely,
       // which meant no pin/submission/DQ path could ever be reached
       // through a counter -- a real gap, now fixed.
-      const damage = counterPage.def.getNumericField('Damage', 0);
-      if (damage) attacker.hitPoints = Math.max(0, attacker.hitPoints - damage);
+      const baseDamage = counterPage.def.getNumericField('Damage', 0);
+      let damage = 0;
+      if (baseDamage > 0 && !this.isDamagePrevented(defender, attacker, counterPage)) {
+        damage = this.computeFinalDamage(defender, attacker, counterPage, baseDamage);
+        attacker.hitPoints = Math.max(0, attacker.hitPoints - damage);
+      }
       const ctx = this.baseCtx(counterPage, defender.superstarPage, attacker.superstarPage);
       this.runScript(counterPage.def, 'Move_Connected', ctx);
       if (damage) this.game.log(`${counterPage.name} (counter) deals ${damage} damage. ${attackerId} HP -> ${attacker.hitPoints}.`);

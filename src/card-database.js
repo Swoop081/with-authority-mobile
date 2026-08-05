@@ -1,12 +1,7 @@
 import { parseScript } from './parser.js';
 
-// Browser-compatible sibling of the Node card-database.js. Same
-// CardDefinition/CardDatabase shape and same edition-inheritance logic
-// (confirmed 2024-08: stat fields like Hit_Points are safe to inherit
-// across editions of the same character; ability scripts never are),
-// just loaded from a pre-fetched JSON bundle instead of the filesystem.
-
 const EDITION_SUFFIX = /(2E|EX[1-4]|LE|Tourn|W)$/;
+
 const INHERITABLE_STAT_FIELDS = [
   'Hit_Points', 'Strike_Maximum', 'Strength_Maximum', 'Technical_Maximum',
   'Agility_Maximum', 'Knowledge_Maximum',
@@ -18,10 +13,9 @@ export class CardDefinition {
     this.name = raw.name;
     this.template = raw.template;
     this.text = raw.text;
-    this.fields = { ...(raw.fields || {}) };
+    this.fields = raw.fields || {};
     this.assets = raw.assets || [];
     this._astCache = new Map();
-    this.unid = null;
   }
 
   hasScript(fieldName) {
@@ -51,26 +45,26 @@ export class CardDatabase {
     this.byUNID = new Map();
   }
 
-  static fromBundle(bundle) {
+  // Browser-side loader: fetches the pre-bundled JSON instead of
+  // reading a directory off disk.
+  static async loadFromUrl(cardsJsonUrl) {
     const db = new CardDatabase();
+    const bundle = await fetch(cardsJsonUrl).then((r) => r.json());
     for (const [filename, raw] of Object.entries(bundle.cards)) {
-      db.byFilename.set(filename, new CardDefinition(raw, filename));
+      const def = new CardDefinition(raw, filename);
+      db.byFilename.set(filename, def);
     }
-    for (const [unid, filename] of Object.entries(bundle.unidMap || {})) {
-      const def = db.byFilename.get(filename);
-      if (def) {
-        db.byUNID.set(Number(unid), def);
-        def.unid = Number(unid);
+    if (bundle.unidMap) {
+      for (const [unid, filename] of Object.entries(bundle.unidMap)) {
+        const def = db.byFilename.get(filename);
+        if (def) {
+          db.byUNID.set(Number(unid), def);
+          def.unid = Number(unid);
+        }
       }
     }
     db.resolveEditionInheritance();
     return db;
-  }
-
-  static async loadFromUrl(url) {
-    const res = await fetch(url);
-    const bundle = await res.json();
-    return CardDatabase.fromBundle(bundle);
   }
 
   resolveEditionInheritance() {

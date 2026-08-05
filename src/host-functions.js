@@ -75,6 +75,18 @@ export function isMomentumCard(def) {
     || (def.template || '').replace('-', '_').startsWith('Momentum_Template');
 }
 
+// A "Special" card (confirmed real category, includes Entrance cards
+// like Kane's "Hellfire And Brimstone") -- not a move (no Method), not
+// momentum, not a superstar card. Playable through Can_Be_Played gating
+// via Page_Played, not Move_Connected, and never counter-eligible.
+export function isSpecialCard(def) {
+  if (!def) return false;
+  if (isMoveCard(def) || isMomentumCard(def)) return false;
+  if (def.fields.Hit_Points !== undefined) return false; // superstar card
+  return def.hasScript('Page_Played') || def.hasScript('Can_Be_Played')
+    || (def.template || '').includes('Special');
+}
+
 function asName(x) {
   if (x === false || x === undefined || x === null) return '';
   if (typeof x === 'object' && 'name' in x) return x.name;

@@ -48,6 +48,13 @@ export class Player {
     // compiled WAPinSuperstar implementation.
     this.onMat = false;
 
+    // Ongoing passive-effect pages: confirmed real mechanic (Entrance
+    // cards like Kane's "Hellfire And Brimstone" -- Can_Be_Played gated
+    // to turns 1-2, once per match -- stay in play for the rest of the
+    // match applying Damage_Bonus/Prevent_Damage effects on every
+    // subsequent combat, not just when played). Populated by the game
+    // loop when such a card is played instead of being discarded.
+    this.activePassives = [];
     // Warnings/DQ, confirmed directly from the real "DQ Warning" card
     // text: "Once you receive 5 or more Warnings you have a 5% chance
     // per warning of being Disqualified." Real cards add warnings via
