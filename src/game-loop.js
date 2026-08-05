@@ -2,6 +2,7 @@ import { Zone } from './page-instance.js';
 import { HoldManager } from './submission.js';
 import { BODY_PARTS } from './submission.js';
 import { isMoveCard, isMomentumCard } from './host-functions.js';
+import { Location } from './location.js';
 
 // Ties every confirmed subsystem together into an actual playable match.
 // Where a rule wasn't confirmed (pin base %, AI reaction sophistication),
@@ -69,6 +70,12 @@ export class GameLoop {
   chooseMove(player, opponent) {
     const legalMoves = player.playbook.hand.filter((pg) => {
       if (!isMoveCard(pg.def)) return false;
+      // CONFIRMED (real bug found via a real GitHub Pages test run):
+      // Move_Type "defensive" marks a card as counter-only -- e.g. "Up
+      // and Over": "This move may not be used offensively." 32 real
+      // cards carry this. They remain fully eligible in chooseCounter
+      // (that's their whole purpose); they must never be offered here.
+      if (pg.def.fields.Move_Type === 'defensive') return false;
       return this.isLegalToPlay(pg, player, opponent);
     });
     if (legalMoves.length === 0) return null;
@@ -83,13 +90,33 @@ export class GameLoop {
       } else {
         movePage.setValue('AIScore', 10); // no AI hook -- flat baseline priority
       }
-      const score = movePage.getValue('AIScore');
+      let score = movePage.getValue('AIScore');
+
+      // DQ-risk awareness (not a data-driven rule -- a strategic layer
+      // on top of the real per-card AI scores). Confirmed formula: DQ
+      // chance is 5% per warning once you hit 5+. A player already
+      // sitting on real risk should avoid piling on more warnings
+      // unless nothing else is on offer. Heavily penalize (don't
+      // outright ban -- a big finisher might still be worth the risk)
+      // warning-granting cards once warnings are already elevated.
+      if (player.warnings >= 3 && this.givesWarnings(movePage)) {
+        score -= 40 + player.warnings * 10;
+      }
+
       if (score > bestScore) {
         bestScore = score;
         best = movePage;
       }
     }
     return best;
+  }
+
+  givesWarnings(page) {
+    for (const field of ['Move_Connected', 'Page_Played']) {
+      const src = page.def.fields[field];
+      if (typeof src === 'string' && src.includes('WAWarn')) return true;
+    }
+    return false;
   }
 
   canCoverCost(player, page) {
@@ -310,6 +337,28 @@ export class GameLoop {
   // to. Returns the id of whoever has control after this exchange, or
   // null if nobody could act (stalemate escape hatch).
   runExchange() {
+    const control = this.runExchangeInner();
+    // Count-out ticks once per exchange, after whatever action happened
+    // (so a player who just returned to the ring this exchange doesn't
+    // also get counted the same turn -- confirmed: "the referee tells
+    // you the count at the end of each turn").
+    if (!this.game.winTracker.isOver()) this.tickCountOuts();
+    return this.game.winTracker.isOver() ? null : control;
+  }
+
+  tickCountOuts() {
+    for (const pid of ['A', 'B']) {
+      const p = this.game.players[pid];
+      if (p.locationState.isRingside()) {
+        const countedOut = this.game.countOutTracker.tickCount(p, this.game.referee);
+        if (countedOut) {
+          this.game.winTracker.declareCountOut(this.game.other(pid));
+        }
+      }
+    }
+  }
+
+  runExchangeInner() {
     this.game.turn += 1;
     const attackerId = this.game.controlPlayerId;
     const defenderId = this.game.other(attackerId);
@@ -323,24 +372,24 @@ export class GameLoop {
     this.processActiveHolds();
     if (this.game.winTracker.isOver()) return null;
 
-    // Count-out ticking was completely unwired until now -- confirmed
-    // via a real card (Back Body Drop to Ringside) correctly sending a
-    // wrestler to Ringside, but nothing was ever counting them.
-    for (const pid of ['A', 'B']) {
-      const p = this.game.players[pid];
-      if (p.locationState.isRingside()) {
-        const countedOut = this.game.countOutTracker.tickCount(p, this.game.referee);
-        if (countedOut) {
-          this.game.winTracker.declareCountOut(this.game.other(pid));
-        }
-      }
-    }
-    if (this.game.winTracker.isOver()) return null;
-
     // Confirmed: stun forces a pass.
     if (attacker.isStunned()) {
       attacker.consumeStunnedTurn();
       this.game.log(`${attackerId} is stunned and passes. Control flips to ${defenderId}.`);
+      this.game.controlPlayerId = defenderId;
+      return defenderId;
+    }
+
+    // Confirmed: "return to the ring" is a free action available on your
+    // own turn, same principle as Pin. CORRECTED (2024-08): this was
+    // never actually wired in -- the count-out ticker existed but no one
+    // could ever escape it, which is why count-outs were dominating.
+    // Treated as a genuine priority: a player at Ringside on their own
+    // turn always takes it before considering anything else, reflecting
+    // real urgency to not get counted out.
+    if (attacker.locationState.isRingside()) {
+      attacker.locationState.moveTo(Location.IN_RING);
+      this.game.log(`${attackerId} returns to the ring (count reset).`);
       this.game.controlPlayerId = defenderId;
       return defenderId;
     }

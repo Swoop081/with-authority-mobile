@@ -67,10 +67,53 @@
   #log {
     flex: 1; overflow-y: auto; margin: 8px 16px; padding: 10px 12px; border-radius: 8px;
     background: var(--panel); border: 1px solid var(--hairline);
-    height: 44vh; font-size: 12px; line-height: 1.5;
+    height: 30vh; font-size: 12px; line-height: 1.5;
   }
   .log-line { color: var(--parchment-dim); white-space: pre-wrap; }
   .log-highlight { color: var(--gold); font-weight: 700; }
+
+  .portrait {
+    width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+    border: 1px solid var(--hairline); margin-bottom: 6px; background: var(--panel);
+  }
+  .fighter.b .portrait { float: right; }
+
+  .hand-section { padding: 10px 16px 4px; }
+  .hand-label { font-size: 10.5px; letter-spacing: 0.6px; color: var(--parchment-dim); margin-bottom: 6px; }
+  .hand-row {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity;
+  }
+
+  .flip-card {
+    width: 74px; height: 100px; flex-shrink: 0; perspective: 600px; scroll-snap-align: start;
+    cursor: pointer;
+  }
+  .flip-card-inner {
+    position: relative; width: 100%; height: 100%; transition: transform 0.4s;
+    transform-style: preserve-3d;
+  }
+  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+  .flip-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 6px; border: 1.5px solid var(--type-color, var(--hairline));
+    overflow: hidden; background: var(--panel-raised);
+  }
+  .flip-face.back { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 5px; }
+  .flip-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .flip-face .card-name-strip {
+    position: absolute; left: 0; right: 0; bottom: 0; background: rgba(10,10,12,0.82);
+    font-size: 8px; padding: 2px 4px; color: var(--parchment); line-height: 1.15;
+    max-height: 26px; overflow: hidden;
+  }
+  .flip-face.back .back-name { font-size: 9px; font-weight: 700; color: var(--type-color, var(--gold)); margin-bottom: 3px; line-height: 1.15; }
+  .flip-face.back .back-stat { font-size: 8px; color: var(--parchment-dim); margin-bottom: 2px; }
+  .flip-face.back .back-text { font-size: 7.5px; color: var(--parchment-dim); line-height: 1.2; overflow: hidden; flex: 1; }
+  .card-locked { opacity: 0.4; }
+
+  .card-back-generic {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: rgba(255,255,255,0.3); background: repeating-linear-gradient(135deg, #1c1a20, #1c1a20 6px, #181620 6px, #181620 12px);
+  }
 
   .controls { display: flex; gap: 8px; padding: 10px 16px 20px; }
   button {
@@ -91,12 +134,14 @@
 
   <div class="versus">
     <div class="fighter a">
+      <img class="portrait" id="a-portrait" alt="" />
       <div class="fighter-name display" id="a-name">&nbsp;</div>
       <div class="fighter-hp" id="a-hp">&nbsp;</div>
       <div class="hp-bar-track"><div class="hp-bar-fill" id="a-hp-bar" style="width:100%"></div></div>
       <div class="momentum-row" id="a-momentum"></div>
     </div>
     <div class="fighter b">
+      <img class="portrait" id="b-portrait" alt="" />
       <div class="fighter-name display" id="b-name">&nbsp;</div>
       <div class="fighter-hp" id="b-hp">&nbsp;</div>
       <div class="hp-bar-track"><div class="hp-bar-fill" id="b-hp-bar" style="width:100%"></div></div>
@@ -106,6 +151,16 @@
 
   <div id="turn">Turn 0 / 50</div>
   <div id="result"></div>
+
+  <div class="hand-section">
+    <div class="hand-label display">YOUR HAND (Player A)</div>
+    <div class="hand-row" id="a-hand"></div>
+  </div>
+  <div class="hand-section">
+    <div class="hand-label display">OPPONENT'S HAND (hidden)</div>
+    <div class="hand-row" id="b-hand"></div>
+  </div>
+
   <div id="log"></div>
 
   <div class="controls">
