@@ -439,6 +439,12 @@ export class GameLoop {
 
     this.game.log(`\n--- Turn ${this.game.turn}: ${attackerId} in control ---`);
 
+    // Same fix as MatchController.continueTurnAfterHolds: reset
+    // unconditionally at the start of every turn, not only after a
+    // move successfully resolves, or a pass-with-no-legal-move spiral
+    // permanently locks momentum out for the rest of the match.
+    attacker.momentum.resetTurnFlag();
+
     if (this.game.winTracker.checkTurnLimit(this.game.turn)) return null;
 
     this.processActiveHolds();

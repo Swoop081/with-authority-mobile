@@ -242,10 +242,7 @@ function buildFlipCard(pg, state, actionable) {
     ${img ? `<img class="front-photo" src="${img}" alt="" />` : ''}
     <div class="front-statbar">
       <div class="front-name">${pg.name}</div>
-      <div class="front-meta">
-        <span>${costText}</span>
-        <span>${dmg ? 'DMG: ' + dmg : ''}</span>
-      </div>
+      ${(costText || dmg) ? `<div class="front-meta"><span>${costText}</span><span>${dmg ? 'DMG: ' + dmg : ''}</span></div>` : ''}
       ${method ? `<div class="front-method">${method}</div>` : ''}
     </div>
   `;

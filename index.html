@@ -120,18 +120,25 @@
   }
   .flip-face.back { transform: rotateY(180deg); }
 
-  /* Front: real template frame as base, character art inset, stat bar overlaid */
+  /* Front: real template frame as base, character art inset, stat bar
+     below it. Flex column so the photo always fills exactly the space
+     above however much text the stat bar actually needs -- fixed
+     percentage heights left a visible gap on cards with little/no
+     stat text (confirmed via a real card, "Bounce Off The Ropes",
+     which has no cost/damage/method to show). */
+  .flip-face.front { display: flex; flex-direction: column; padding: 6% 10% 4%; }
   .front-photo {
-    position: absolute; left: 10%; top: 6%; width: 80%; height: 65%;
+    flex: 1; min-height: 0; width: 100%;
     object-fit: cover; border-radius: 3px;
   }
   .front-statbar {
-    position: absolute; left: 0; right: 0; bottom: 0; padding: 5px 8px 6px;
+    margin: 0 -10%; padding: 5px 8px 6px;
     background: rgba(8,8,10,0.88);
   }
   .front-name { font-size: 11.5px; font-weight: 700; color: var(--parchment); line-height: 1.2; margin-bottom: 2px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .front-meta { display: flex; justify-content: space-between; font-size: 9px; color: var(--parchment-dim); }
+  .front-meta:empty { display: none; }
   .front-method { font-size: 8.5px; color: var(--type-color, var(--gold)); text-transform: uppercase; letter-spacing: 0.3px; }
 
   /* Back: real per-category back template, name + full rules text */

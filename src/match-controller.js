@@ -281,6 +281,15 @@ export class MatchController {
     const attacker = this.game.players[attackerId];
     const defender = this.game.players[defenderId];
 
+    // CRITICAL FIX (found via real playthrough, screenshot showing 21
+    // turns stuck with all-zero momentum): resetTurnFlag was only ever
+    // called after a move successfully resolved. A very common real
+    // sequence -- play momentum, then have no legal move and pass --
+    // never hit that code path, so the flag stayed permanently true and
+    // the player could never play momentum again for the rest of the
+    // match. Reset unconditionally at the start of every turn instead.
+    attacker.momentum.resetTurnFlag();
+
     if (attacker.isStunned()) {
       attacker.consumeStunnedTurn();
       this.game.log(`${attackerId} is stunned and passes. Control flips to ${defenderId}.`);
