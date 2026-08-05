@@ -44,46 +44,43 @@
     z-index: 30;
     border-bottom: 1px solid var(--hairline);
     background: #000 url('images/crowd-bg.png') center/cover;
-    height: 168px;
   }
   .arena::after {
     content: '';
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.15) 100%);
   }
-  .arena-content { position: relative; z-index: 3; height: 100%; padding: 8px 10px; }
-  .fighter-name-corner {
-    position: absolute; top: 6px; font-size: 15px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); z-index: 4;
-  }
-  .fighter-name-corner.a { left: 10px; }
-  .fighter-name-corner.b { right: 10px; }
-
-  .fighter-row { position: absolute; left: 8px; right: 8px; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end; }
+  .arena-content { position: relative; z-index: 3; padding: 8px 10px; }
+  .fighter-row { display: flex; justify-content: space-between; align-items: flex-end; }
   .fighter { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 6px; }
   .fighter.b { flex-direction: row-reverse; }
   .fighter-portrait {
-    width: 74px; height: 108px; object-fit: cover; border-radius: 5px 5px 0 0;
+    width: 92px; height: 92px; object-fit: cover; border-radius: 5px 5px 0 0;
     border: 1px solid rgba(255,255,255,0.2); border-bottom: none; flex-shrink: 0;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
   }
-  .fighter-info { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-bottom: 6px; }
+  .fighter-info { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; padding-bottom: 6px; }
   .fighter.b .fighter-info > * { align-self: flex-end; }
-  .fighter-hp-big { font-size: 26px; font-weight: 800; line-height: 1; color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,0.9); font-family: "Arial Black", Impact, sans-serif; }
-  .fighter-hp-big span { font-size: 12px; color: var(--parchment-dim); font-weight: 400; }
+  .name-hp-row { display: flex; align-items: baseline; gap: 6px; }
+  .fighter.b .name-hp-row { flex-direction: row-reverse; }
+  .fighter-name-inline { font-size: 14px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+  .fighter-hp-big { font-size: 22px; font-weight: 800; line-height: 1; color: var(--gold); text-shadow: 0 2px 6px rgba(0,0,0,0.9); font-family: "Arial Black", Impact, sans-serif; }
+  .fighter-hp-big span { font-size: 10px; color: var(--parchment-dim); font-weight: 400; }
 
-  .momentum-row { display: grid; grid-template-columns: repeat(3, auto); gap: 3px; margin-top: 4px; }
+  .momentum-row { display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 2px; margin-top: 4px; }
+  .fighter.b .momentum-row { justify-content: end; }
   .momentum-chip {
-    display: flex; align-items: center; gap: 3px; padding: 1px 5px 1px 1px; border-radius: 5px;
+    display: flex; align-items: center; gap: 2px; padding: 1px 4px 1px 1px; border-radius: 4px;
     background: rgba(10,10,12,0.75); border: 1px solid var(--chip-color, var(--hairline));
-    font-size: 10px;
+    font-size: 9px;
   }
-  .momentum-chip img { width: 13px; height: 13px; border-radius: 2px; display: block; }
-  .momentum-chip.attitude-chip { padding: 1px 6px; }
+  .momentum-chip img { width: 11px; height: 11px; border-radius: 2px; display: block; }
   .chip-val { color: var(--parchment); font-weight: 700; }
 
-  .body-damage-row { display: flex; gap: 3px; margin-top: 4px; }
+  .body-damage-row { display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 2px; margin-top: 3px; }
+  .fighter.b .body-damage-row { justify-content: end; }
   .body-damage-chip {
-    font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(10,10,12,0.7);
+    font-size: 8px; padding: 1px 3px; border-radius: 4px; background: rgba(10,10,12,0.7);
     border: 1px solid var(--hairline); color: var(--parchment-dim);
   }
   .body-damage-chip b { color: var(--parchment); }
@@ -164,13 +161,14 @@
 
   <div class="arena">
     <div class="arena-content">
-      <div class="fighter-name-corner a display" id="a-name">&nbsp;</div>
-      <div class="fighter-name-corner b display" id="b-name">&nbsp;</div>
       <div class="fighter-row">
         <div class="fighter a">
           <img class="fighter-portrait" id="a-portrait" alt="" />
           <div class="fighter-info">
-            <div class="fighter-hp-big" id="a-hp">&mdash;<span> HP</span></div>
+            <div class="name-hp-row">
+              <span class="fighter-name-inline display" id="a-name">&nbsp;</span>
+              <span class="fighter-hp-big" id="a-hp">&mdash;<span> HP</span></span>
+            </div>
             <div class="momentum-row" id="a-momentum"></div>
             <div class="body-damage-row" id="a-body"></div>
           </div>
@@ -178,7 +176,10 @@
         <div class="fighter b">
           <img class="fighter-portrait" id="b-portrait" alt="" />
           <div class="fighter-info">
-            <div class="fighter-hp-big" id="b-hp">&mdash;<span> HP</span></div>
+            <div class="name-hp-row">
+              <span class="fighter-name-inline display" id="b-name">&nbsp;</span>
+              <span class="fighter-hp-big" id="b-hp">&mdash;<span> HP</span></span>
+            </div>
             <div class="momentum-row" id="b-momentum"></div>
             <div class="body-damage-row" id="b-body"></div>
           </div>

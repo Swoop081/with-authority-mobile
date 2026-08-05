@@ -41,7 +41,7 @@ const TYPE_COLORS = {
 const MOMENTUM_ICONS = {
   Strike: 'images/icon-strike.png', Strength: 'images/icon-strength.png',
   Technical: 'images/icon-technical.png', Agility: 'images/icon-agility.png',
-  Knowledge: 'images/icon-knowledge.png',
+  Knowledge: 'images/icon-knowledge.png', Attitude: 'images/icon-attitude.png',
 };
 const BODY_PARTS = ['Head', 'Arm', 'Back', 'Leg'];
 
@@ -66,12 +66,9 @@ function renderMomentum(target, player) {
   target.innerHTML = '';
   for (const t of MOMENTUM_TYPES) {
     const chip = document.createElement('div');
-    chip.className = 'momentum-chip' + (t === 'Attitude' ? ' attitude-chip' : '');
+    chip.className = 'momentum-chip';
     chip.style.setProperty('--chip-color', TYPE_COLORS[t]);
-    const iconSrc = MOMENTUM_ICONS[t];
-    chip.innerHTML = iconSrc
-      ? `<img src="${iconSrc}" alt="${t}" title="${t}" /><span class="chip-val">${player.momentum.get(t)}</span>`
-      : `<span class="chip-val" style="color:${TYPE_COLORS.Attitude}">WWF</span><span class="chip-val">${player.momentum.get(t)}</span>`;
+    chip.innerHTML = `<img src="${MOMENTUM_ICONS[t]}" alt="${t}" title="${t}" /><span class="chip-val">${player.momentum.get(t)}</span>`;
     target.appendChild(chip);
   }
 }
